@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Crédito Hipotecario - Generar plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-hover: #243044;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --text-muted: #8b9cb3;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #22c55e;
+      --warning: #eab308;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      margin: 0;
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      font-size: 1rem;
+      font-family: inherit;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.65rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: var(--accent-hover); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .extra-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0 0 0.75rem 0;
+      line-height: 1.4;
+    }
+
+    .unidad-monto { display: flex; gap: 1.25rem; margin-bottom: 0.75rem; }
+
+    .radio-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .radio-label input { width: auto; margin: 0; cursor: pointer; }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 70vh;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--surface-hover);
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    td { padding: 0.6rem 1rem; border-top: 1px solid var(--border); }
+    tr:hover td { background: var(--surface-hover); }
+    .num { text-align: right; }
+    .cuota-adelantada { background: rgba(34, 197, 94, 0.15); }
+
+    .mensaje-adelanto {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      border-radius: 8px;
+      color: var(--success);
+      font-weight: 500;
+    }
+
+    .resumen-item {
+      background: var(--bg);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .resumen-item strong {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .resumen-item span { font-size: 1.25rem; font-weight: 700; }
+
+    .resumen-item--destacado {
+      border-color: var(--success);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .resumen-item--destacado span { color: var(--success); }
+
+    .hidden { display: none; }
+
+    .loading { text-align: center; padding: 2rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simulador Crédito Hipotecario</h1>
+    <p class="subtitle">Generá tu plan con capital, tasa y años; después calculá adelantos de capital.</p>
+
+    <div class="card">
+      <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Datos del crédito</h2>
+      <p class="extra-hint" style="margin-bottom: 0.75rem;">Ingresá el monto en UVAs que te prestó el banco, la TNA (tasa nominal anual) y la cantidad de años. Sistema francés.</p>
+      <div class="form-grid">
+        <div>
+          <label for="capitalUVA">Capital del crédito (UVAs)</label>
+          <input type="number" id="capitalUVA" min="1" step="0.01" placeholder="Ej: 53097">
+        </div>
+        <div>
+          <label for="tna">TNA (%)</label>
+          <input type="number" id="tna" min="0" step="0.01" placeholder="Ej: 9">
+          <small id="detalleTEA" style="display:block; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;">TEA: —</small>
+        </div>
+        <div>
+          <label for="anios">Años</label>
+          <input type="number" id="anios" min="1" max="50" step="1" placeholder="Ej: 30">
+        </div>
+        <div>
+          <label for="seguroUVA">Seguro por cuota (UVA)</label>
+          <input type="number" id="seguroUVA" min="0" step="0.01" value="9.90" placeholder="Ej: 9.90">
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+          <button type="button" class="btn" id="btnGenerarPlan">Generar plan</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Valor UVA</h2>
+      <p class="extra-hint" style="margin-bottom: 0.75rem;">Ingresá cuántos pesos equivale 1 UVA hoy (ej. 1 UVA = 1818 $). Se usa para convertir y para mostrar la tabla en $.</p>
+      <div class="form-grid" style="max-width: 280px;">
+        <div>
+          <label for="valorUVA">1 UVA = ($)</label>
+          <input type="number" id="valorUVA" min="0.01" step="0.01" value="1818" placeholder="Ej: 1818">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>¿Cuántas cuotas adelanto si pago extra?</label>
+      <p class="extra-hint">Elegí si ingresás el monto en pesos ($) o en UVAs. Se aplica al <strong>capital</strong> de la cuota actual en adelante.</p>
+      <div class="unidad-monto">
+        <label class="radio-label">
+          <input type="radio" name="unidadMonto" value="pesos" id="unidadPesos" checked>
+          <span>Monto en $</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="unidadMonto" value="uva" id="unidadUVA">
+          <span>Monto en UVA</span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label for="pagoExtra" id="labelPagoExtra">Monto extra a capital ($)</label>
+          <input type="number" id="pagoExtra" min="0" step="0.01" placeholder="Ej: 50000">
+        </div>
+        <div>
+          <label for="cuotaActual">Nº de cuota actual</label>
+          <input type="number" id="cuotaActual" min="1" max="360" value="1" placeholder="Ej: 1">
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+          <button type="button" class="btn" id="btnAdelanto">Calcular adelanto</button>
+        </div>
+      </div>
+      <div id="boxResultadoAdelanto" class="hidden">
+        <div class="resumen-item" style="margin-bottom: 0.75rem;">
+          <strong>UVAs que adelantás</strong>
+          <span id="uvasAdelantadas">—</span>
+          <small id="uvasAdelantadasDetalle" style="display:block; font-size: 0.8rem; color: var(--text-muted); font-weight: 400; margin-top: 0.2rem;"></small>
+        </div>
+      </div>
+      <div id="mensajeAdelanto" class="mensaje-adelanto hidden"></div>
+    </div>
+
+    <div class="card card-interes-evitado">
+      <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Interés que evitás de pagar</h2>
+      <p class="subtitle" style="margin-bottom: 0.75rem;">Suma del interés de las cuotas que adelantaste con el capital extra.</p>
+      <div class="resumen-item resumen-item--destacado">
+        <strong>Total interés evitado</strong>
+        <span id="interesEvitadoUVA">—</span>
+        <span id="interesEvitadoPesos" style="display:block; margin-top: 0.25rem;"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">Plan de pago</h2>
+      <p class="subtitle" id="tablaSubtitulo" style="margin-bottom: 1rem;">Ingresá los datos del crédito y hacé clic en Generar plan.</p>
+      <div class="table-wrap" id="tablaTuPlan" style="max-height: 65vh;">
+        <p class="loading" id="tablaPlaceholder">Ingresá capital (UVAs), tasa anual (%) y años, luego Generar plan.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let plan = null;
+
+    function tnaATea(tnaPct) {
+      if (tnaPct == null || isNaN(tnaPct)) return NaN;
+      var iNominalAnual = tnaPct / 100;
+      return (Math.pow(1 + iNominalAnual / 12, 12) - 1) * 100;
+    }
+
+    function tasaMensualDesdeTEA(teaPct) {
+      var iAnual = teaPct / 100;
+      return Math.pow(1 + iAnual, 1 / 12) - 1;
+    }
+
+    function cuotaFrances(P, i, n) {
+      if (i === 0) return P / n;
+      return P * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+    }
+
+    function generarPlan(P, tnaPct, anios) {
+      var teaPct = tnaATea(tnaPct);
+      if (isNaN(teaPct)) teaPct = 0;
+      var i = tasaMensualDesdeTEA(teaPct);
+      var n = anios * 12;
+      var C = cuotaFrances(P, i, n);
+      var filas = [];
+      var saldo = P;
+
+      for (var k = 1; k <= n; k++) {
+        var interes = saldo * i;
+        var capital = C - interes;
+        saldo = Math.max(0, saldo - capital);
+        filas.push({ n: k, interes: interes, capital: capital, saldo: saldo, cuota: C });
+      }
+
+      if (filas.length > 0) {
+        var last = filas[filas.length - 1];
+        last.cuota = last.capital + last.interes;
+        last.saldo = 0;
+      }
+
+      return {
+        filas: filas,
+        cuota: C,
+        totalCuotas: n,
+        totalIntereses: filas.reduce(function (s, f) { return s + f.interes; }, 0),
+        capital: P,
+        tna: tnaPct,
+        tea: teaPct,
+        anios: anios
+      };
+    }
+
+    function cuotasAdelantadasCorrecto(plan, montoUVAs, desdeCuota) {
+      if (montoUVAs <= 0 || !desdeCuota || desdeCuota < 1) return { adelantadas: 0, primeraCuotaNoPagada: desdeCuota || 1 };
+      var acum = 0;
+      var count = 0;
+      for (var i = 0; i < plan.filas.length; i++) {
+        var f = plan.filas[i];
+        if (f.n < desdeCuota) continue;
+        acum += f.capital;
+        if (acum <= montoUVAs) { count++; } else { break; }
+      }
+      return { adelantadas: count, primeraCuotaNoPagada: desdeCuota + count };
+    }
+
+    function formatearPesos(num) {
+      return '$' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatearUVA(num) {
+      return num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' UVA';
+    }
+
+    function renderTablaPlan(cuotaHighlightDesde, cuotaHighlightHasta) {
+      var wrap = document.getElementById('tablaTuPlan');
+      var subtitulo = document.getElementById('tablaSubtitulo');
+
+      if (!plan || !plan.filas.length) {
+        wrap.innerHTML = '<p class="loading" id="tablaPlaceholder">Ingresá capital (UVAs), tasa anual (%) y años, luego Generar plan.</p>';
+        subtitulo.textContent = 'Ingresá los datos del crédito y hacé clic en Generar plan.';
+        return;
+      }
+      var valorUVA = parseFloat(document.getElementById('valorUVA').value) || 1818;
+      if (valorUVA <= 0) valorUVA = 1818;
+      var seguroUVA = parseFloat(document.getElementById('seguroUVA').value) || 0;
+
+      subtitulo.textContent = 'Capital ' + formatearUVA(plan.capital) + ' — ' + plan.totalCuotas + ' cuotas — TEA ' + (plan.tea != null ? plan.tea.toFixed(2) : '—') + '% anual — Sistema francés';
+
+      var destacarDesde = cuotaHighlightDesde != null ? cuotaHighlightDesde : -1;
+      var destacarHasta = cuotaHighlightHasta != null ? cuotaHighlightHasta - 1 : -1;
+
+      var html = '<table><thead><tr><th>#</th><th class="num">Pago (UVA)</th><th class="num">Pago ($)</th><th class="num">Capital (UVA)</th><th class="num">Capital ($)</th><th class="num">Interés (UVA)</th><th class="num">Interés ($)</th><th class="num">Saldo (UVA)</th><th class="num">Saldo ($)</th></tr></thead><tbody>';
+      plan.filas.forEach(function (f) {
+        var cuotaUVA = f.n === plan.filas.length ? (f.capital + f.interes) : plan.cuota;
+        var pagoUVA = cuotaUVA + seguroUVA;
+        var pagoPesos = pagoUVA * valorUVA;
+        var capUVA = f.capital;
+        var capPesos = capUVA * valorUVA;
+        var intUVA = f.interes;
+        var intPesos = intUVA * valorUVA;
+        var saldoUVA = f.saldo;
+        var saldoPesos = saldoUVA * valorUVA;
+        var esAdelantada = destacarDesde >= 0 && destacarHasta >= 0 && f.n >= destacarDesde && f.n <= destacarHasta;
+        var rowClass = esAdelantada ? ' class="cuota-adelantada"' : '';
+        html += '<tr' + rowClass + '><td>' + f.n + '</td><td class="num">' + formatearUVA(pagoUVA) + '</td><td class="num">' + formatearPesos(pagoPesos) + '</td><td class="num">' + formatearUVA(capUVA) + '</td><td class="num">' + formatearPesos(capPesos) + '</td><td class="num">' + formatearUVA(intUVA) + '</td><td class="num">' + formatearPesos(intPesos) + '</td><td class="num">' + formatearUVA(saldoUVA) + '</td><td class="num">' + formatearPesos(saldoPesos) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+    }
+
+    function actualizarLabelMonto() {
+      var enPesos = document.getElementById('unidadPesos').checked;
+      var label = document.getElementById('labelPagoExtra');
+      var input = document.getElementById('pagoExtra');
+      if (enPesos) {
+        label.textContent = 'Monto extra a capital ($)';
+        input.placeholder = 'Ej: 50000';
+      } else {
+        label.textContent = 'Monto extra a capital (UVA)';
+        input.placeholder = 'Ej: 25.5';
+      }
+    }
+
+    function actualizarDetalleTEA() {
+      var tna = parseFloat(document.getElementById('tna').value);
+      var tea = tnaATea(tna);
+      var el = document.getElementById('detalleTEA');
+      if (el) el.textContent = 'TEA: ' + (isNaN(tea) ? '—' : tea.toFixed(2) + '% (utilizado para el cálculo)');
+    }
+    document.getElementById('tna').addEventListener('input', actualizarDetalleTEA);
+    document.getElementById('tna').addEventListener('change', actualizarDetalleTEA);
+
+    document.getElementById('btnGenerarPlan').addEventListener('click', function () {
+      var P = parseFloat(document.getElementById('capitalUVA').value);
+      var tna = parseFloat(document.getElementById('tna').value);
+      var anios = parseInt(document.getElementById('anios').value, 10);
+
+      if (!P || P <= 0 || !anios || anios <= 0) {
+        alert('Completá capital (UVAs) y años con valores válidos.');
+        return;
+      }
+
+      var tnaVal = isNaN(tna) ? 0 : tna;
+      plan = generarPlan(P, tnaVal, anios);
+      actualizarDetalleTEA();
+      document.getElementById('cuotaActual').setAttribute('max', plan.totalCuotas);
+      renderTablaPlan();
+    });
+
+    document.getElementById('unidadPesos').addEventListener('change', actualizarLabelMonto);
+    document.getElementById('unidadUVA').addEventListener('change', actualizarLabelMonto);
+
+    document.getElementById('btnAdelanto').addEventListener('click', function () {
+      var valorInput = parseFloat(document.getElementById('pagoExtra').value) || 0;
+      var valorUVA = parseFloat(document.getElementById('valorUVA').value) || 0;
+      var enPesos = document.getElementById('unidadPesos').checked;
+      var cuotaActual = parseInt(document.getElementById('cuotaActual').value, 10) || 1;
+      var maxCuota = plan ? plan.totalCuotas : 360;
+      var cuotaActualClamp = Math.min(maxCuota, Math.max(1, cuotaActual));
+      var msg = document.getElementById('mensajeAdelanto');
+
+      if (!plan || !plan.filas.length) {
+        msg.textContent = 'Primero generá el plan con los datos del crédito.';
+        msg.classList.remove('hidden');
+        return;
+      }
+      if (enPesos && (!valorUVA || valorUVA <= 0)) {
+        msg.textContent = 'Ingresá el valor de UVA (1 UVA = ... $) para calcular.';
+        msg.classList.remove('hidden');
+        return;
+      }
+
+      var montoUVAs = enPesos ? (valorInput / valorUVA) : valorInput;
+      document.getElementById('uvasAdelantadas').textContent = formatearUVA(montoUVAs);
+      document.getElementById('uvasAdelantadasDetalle').textContent = enPesos ? 'Monto en $ ÷ valor UVA' : 'Ingresado en UVA';
+      document.getElementById('boxResultadoAdelanto').classList.remove('hidden');
+
+      var resultado = cuotasAdelantadasCorrecto(plan, montoUVAs, cuotaActualClamp);
+      var adelantadas = resultado.adelantadas;
+      var primeraCuotaNoPagada = resultado.primeraCuotaNoPagada;
+      msg.classList.remove('hidden');
+
+      var totalInteresEvitadoUVA = 0;
+      if (adelantadas > 0) {
+        for (var i = 0; i < plan.filas.length; i++) {
+          var f = plan.filas[i];
+          if (f.n >= cuotaActualClamp && f.n < primeraCuotaNoPagada) totalInteresEvitadoUVA += f.interes;
+        }
+      }
+      var totalInteresEvitadoPesos = totalInteresEvitadoUVA * valorUVA;
+      if (!valorUVA || valorUVA <= 0) totalInteresEvitadoPesos = 0;
+      document.getElementById('interesEvitadoUVA').textContent = formatearUVA(totalInteresEvitadoUVA);
+      document.getElementById('interesEvitadoPesos').textContent = formatearPesos(totalInteresEvitadoPesos);
+
+      if (adelantadas === 0) {
+        msg.textContent = 'El monto extra no alcanza para adelantar una cuota desde la cuota ' + cuotaActualClamp + '. Ingresá un monto mayor.';
+        renderTablaPlan();
+        return;
+      }
+
+      msg.textContent = 'Desde la cuota ' + cuotaActualClamp + ' adelantás ' + adelantadas + ' cuota(s). La próxima a pagar sería la N° ' + primeraCuotaNoPagada + '.';
+      renderTablaPlan(cuotaActualClamp, primeraCuotaNoPagada);
+    });
+
+    document.getElementById('valorUVA').addEventListener('input', function () {
+      if (plan) renderTablaPlan();
+    });
+    document.getElementById('seguroUVA').addEventListener('input', function () {
+      if (plan) renderTablaPlan();
+    });
+
+    actualizarDetalleTEA();
+    renderTablaPlan();
+  </script>
+</body>
+</html>
