@@ -216,14 +216,12 @@
   </style>
 </head>
 <body>
-  <div id="paywallOverlay" class="paywall-overlay hidden">
+  <div id="paywallOverlay" class="paywall-overlay hidden" style="display: none;">
     <div class="paywall-modal">
       <h3>Límite de uso gratuito</h3>
-      <p>Usaste tus <strong id="paywallFreeLimit">2</strong> cálculos de adelanto gratis. Para seguir usando sin límite, pagá 1 USD o su equivalente en pesos (dólar oficial: promedio compra/venta, fuente <a href="https://dolarhoy.com" target="_blank" rel="noopener">dolarhoy.com</a>).</p>
-      <p class="paywall-equivalente" id="paywallEquivalente" style="font-size:0.9rem; margin-bottom:0.75rem;">Cargando cotización…</p>
-      <button type="button" class="btn" id="btnPagar1USD">Pagar 1 USD</button>
-      <button type="button" class="btn btn-secondary" id="btnPagarPesos" style="margin-top:0.5rem; background:var(--surface-hover); color:var(--text);" disabled>Pagar en pesos ($—)</button>
-      <button type="button" class="paywall-close" id="paywallCerrar" style="background:none;border:none;cursor:pointer;padding:0;">Cerrar</button>
+      <p>Usaste tus <strong id="paywallFreeLimit">2</strong> cálculos de adelanto gratis. Para seguir usando sin límite, pagá <strong>$2.000 ARS</strong>.</p>
+      <button type="button" class="btn" id="btnPagarPesos">Pagar $2.000 (pesos)</button>
+      <button type="button" class="paywall-close" id="paywallCerrar" style="background:none;border:none;cursor:pointer;padding:0;margin-top:0.75rem;font-size:0.85rem;color:var(--text-muted);">Cerrar</button>
     </div>
   </div>
 
@@ -338,7 +336,10 @@
     // Asegurar que el paywall esté oculto al cargar (no mostrarlo al entrar a la web)
     (function () {
       var el = document.getElementById('paywallOverlay');
-      if (el) el.classList.add('hidden');
+      if (el) {
+        el.classList.add('hidden');
+        el.style.display = 'none';
+      }
     })();
 
     function getSessionId() {
@@ -377,58 +378,32 @@
         .catch(function () { cb(true); });
     }
 
-    var paywallDolarPromedio = null;
+    var PAGO_PESOS_FIJO = 2000;
 
     function showPaywall(freeLimit) {
+      var overlay = document.getElementById('paywallOverlay');
+      if (!overlay) return;
       document.getElementById('paywallFreeLimit').textContent = freeLimit || FREE_LIMIT;
-      document.getElementById('paywallOverlay').classList.remove('hidden');
-      document.getElementById('paywallEquivalente').textContent = 'Cargando cotización dólar oficial…';
-      document.getElementById('btnPagarPesos').disabled = true;
-      document.getElementById('btnPagarPesos').textContent = 'Pagar en pesos ($—)';
-      paywallDolarPromedio = null;
-      fetch(apiUrl('/.netlify/functions/get-dolar-oficial'))
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          var p = data.promedio;
-          if (p && p > 0) {
-            paywallDolarPromedio = p;
-            var fmt = Math.round(p).toLocaleString('es-AR');
-            document.getElementById('paywallEquivalente').textContent = '1 USD = $' + fmt + ' (promedio compra/venta dólar oficial, fuente dolarapi.com / dolarhoy.com).';
-            document.getElementById('btnPagarPesos').textContent = 'Pagar $' + fmt + ' (pesos)';
-            document.getElementById('btnPagarPesos').disabled = false;
-          } else {
-            document.getElementById('paywallEquivalente').textContent = 'No se pudo cargar la cotización. Usá "Pagar 1 USD".';
-          }
-        })
-        .catch(function () {
-          document.getElementById('paywallEquivalente').textContent = 'No se pudo cargar la cotización. Usá "Pagar 1 USD".';
-        });
+      overlay.classList.remove('hidden');
+      overlay.style.display = '';
     }
     function hidePaywall() {
       var el = document.getElementById('paywallOverlay');
-      if (el) el.classList.add('hidden');
+      if (el) {
+        el.classList.add('hidden');
+        el.style.display = 'none';
+      }
     }
 
     var btnCerrar = document.getElementById('paywallCerrar');
     if (btnCerrar) btnCerrar.addEventListener('click', function (e) { e.preventDefault(); hidePaywall(); });
-    document.getElementById('btnPagar1USD').addEventListener('click', function () {
-      var sessionId = getSessionId();
-      fetch(apiUrl('/.netlify/functions/create-checkout'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: sessionId })
-      })
-        .then(function (r) { return r.json(); })
-        .then(function (data) { if (data.url) window.location.href = data.url; })
-        .catch(function () { alert('Error al crear el pago.'); });
-    });
+
     document.getElementById('btnPagarPesos').addEventListener('click', function () {
-      if (!paywallDolarPromedio) return;
       var sessionId = getSessionId();
       fetch(apiUrl('/.netlify/functions/create-checkout'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: sessionId, amountARS: paywallDolarPromedio })
+        body: JSON.stringify({ id: sessionId, amountARS: PAGO_PESOS_FIJO })
       })
         .then(function (r) { return r.json(); })
         .then(function (data) { if (data.url) window.location.href = data.url; else if (data.error) alert(data.error); })
